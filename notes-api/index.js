@@ -15,6 +15,13 @@ app.use('/api/notes', require('./routes/notes'));
 mongoose.connect(process.env.MONGO_URI)
     .then(() => console.log('MongoDB connected'))
     .catch(err => console.error(err));
+app.use(express.static(path.join(__dirname, "notes-frontend/build")));
 
+
+app.get("*", (req, res) => {
+  res.sendFile(path.join(__dirname, "notes-frontend/build", "index.html"));
+});
 const PORT = process.env.PORT;
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+const path = require("path");
+
