@@ -9,14 +9,17 @@ export default function Notes() {
   const [saving, setSaving] = useState(false);
   const [err, setErr] = useState('');
 
+  // Load notes from API
   async function loadNotes() {
     setLoadingList(true);
     setErr('');
     try {
       const { data } = await api.get('/notes');
-      setNotes(data || []);
+      // Ensure notes is always an array
+      setNotes(Array.isArray(data) ? data : data?.notes || []);
     } catch (error) {
       setErr(error?.response?.data?.error || 'Failed to load notes');
+      setNotes([]);
     } finally {
       setLoadingList(false);
     }
@@ -26,6 +29,7 @@ export default function Notes() {
     loadNotes();
   }, []);
 
+  // Add a new note
   async function addNote(e) {
     e.preventDefault();
     if (!title.trim() || !content.trim()) return;
@@ -43,6 +47,7 @@ export default function Notes() {
     }
   }
 
+  // Delete a note
   async function deleteNote(id) {
     if (!confirm('Delete this note?')) return;
     try {
@@ -53,6 +58,7 @@ export default function Notes() {
     }
   }
 
+  // Update a note
   async function updateNote(id, newTitle, newContent) {
     try {
       const { data } = await api.put(`/notes/${id}`, { title: newTitle, content: newContent });
@@ -70,13 +76,13 @@ export default function Notes() {
         <input
           placeholder="Title"
           value={title}
-          onChange={(e)=>setTitle(e.target.value)}
+          onChange={(e) => setTitle(e.target.value)}
           required
         />
         <textarea
           placeholder="Content"
           value={content}
-          onChange={(e)=>setContent(e.target.value)}
+          onChange={(e) => setContent(e.target.value)}
           required
         />
         <button className="btn" disabled={saving}>{saving ? 'Saving...' : 'Add Note'}</button>
@@ -88,10 +94,13 @@ export default function Notes() {
         <div>Loading...</div>
       ) : (
         <ul className="notes">
-          {notes.map(n => (
-            <NoteItem key={n._id} note={n} onDelete={deleteNote} onSave={updateNote} />
-          ))}
-          {notes.length === 0 && <li>No notes yet. Add one above!</li>}
+          {Array.isArray(notes) && notes.length > 0 ? (
+            notes.map(n => (
+              <NoteItem key={n._id} note={n} onDelete={deleteNote} onSave={updateNote} />
+            ))
+          ) : (
+            <li>No notes yet. Add one above!</li>
+          )}
         </ul>
       )}
     </div>
@@ -108,6 +117,7 @@ function NoteItem({ note, onDelete, onSave }) {
     setT(note.title);
     setC(note.content);
   }
+
   async function save() {
     await onSave(note._id, t, c);
     setEdit(false);
@@ -117,8 +127,8 @@ function NoteItem({ note, onDelete, onSave }) {
     <li className="note">
       {edit ? (
         <>
-          <input value={t} onChange={(e)=>setT(e.target.value)} />
-          <textarea value={c} onChange={(e)=>setC(e.target.value)} />
+          <input value={t} onChange={(e) => setT(e.target.value)} />
+          <textarea value={c} onChange={(e) => setC(e.target.value)} />
           <div className="actions">
             <button className="btn" onClick={save}>Save</button>
             <button className="btn ghost" onClick={cancel}>Cancel</button>
@@ -129,8 +139,8 @@ function NoteItem({ note, onDelete, onSave }) {
           <h3>{note.title}</h3>
           <p>{note.content}</p>
           <div className="actions">
-            <button className="btn" onClick={()=>setEdit(true)}>Edit</button>
-            <button className="btn danger" onClick={()=>onDelete(note._id)}>Delete</button>
+            <button className="btn" onClick={() => setEdit(true)}>Edit</button>
+            <button className="btn danger" onClick={() => onDelete(note._id)}>Delete</button>
           </div>
         </>
       )}
