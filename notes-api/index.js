@@ -21,16 +21,22 @@ mongoose.connect(process.env.MONGO_URI, { useNewUrlParser: true, useUnifiedTopol
     .then(() => console.log('MongoDB connected'))
     .catch(err => console.error('MongoDB connection error:', err));
 
-// // Serve frontend in production
-// if (process.env.NODE_ENV === 'production') {
-//     const frontendPath = path.join(__dirname, '../notes-frontend/dist');
-//     app.use(express.static(frontendPath));
 
-//     // SPA fallback
-//     app.get('*', (req, res) => {
-//         res.sendFile(path.resolve(frontendPath, 'index.html'));
-//     });
-// }
+if (process.env.NODE_ENV === 'production') {
+  const frontendPath = path.join(__dirname, '../notes-frontend/dist');
+  app.use(express.static(frontendPath));
+
+  // SPA fallback (Express 5 safe)
+  app.use((req, res) => {
+    res.sendFile(path.resolve(frontendPath, 'index.html'));
+  });
+} else {
+  app.get('/', (req, res) => {
+    res.send('API is running...');
+  });
+}
+
+
 
 // Start server
 const PORT = process.env.PORT || 5000;
